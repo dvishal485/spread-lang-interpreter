@@ -224,12 +224,14 @@ impl std::ops::Mul for Cell {
         let lhs = match self {
             Cell::Number(n) => n,
             Cell::Boolean(b) => b as u8 as f64,
-            _ => bail!("Cell of type string or empty cell cannot be multiplied."),
+            Cell::Empty => return Ok(rhs),
+            _ => bail!("Cell of type string cannot be multiplied."),
         };
         let rhs = match rhs {
             Cell::Number(n) => n,
             Cell::Boolean(b) => b as u8 as f64,
-            _ => bail!("Cell of type string or empty cell cannot be multiplied."),
+            Cell::Empty => return Ok(self),
+            _ => bail!("Cell of type string cannot be multiplied."),
         };
 
         Ok(Cell::Number(lhs * rhs))
@@ -242,14 +244,16 @@ impl std::ops::Div for Cell {
         let lhs = match self {
             Cell::Number(n) => n,
             Cell::Boolean(b) => b as u8 as f64,
-            _ => bail!("Cell of type a string or empty cell cannot be divided."),
+            Cell::Empty => return Ok(rhs),
+            _ => bail!("Cell of type a string cannot be divided."),
         };
         let rhs = match rhs {
             Cell::Number(n) if n == 0_f64 => bail!("Cannot divide by zero!"),
             Cell::Boolean(false) => bail!("Cannot divide by zero!"),
             Cell::Number(n) if n != 0_f64 => n,
             Cell::Boolean(true) => 1_f64,
-            _ => bail!("Cell cannot be divided by a string or empty cell."),
+            Cell::Empty => return Ok(self),
+            _ => bail!("Cell cannot be divided by a string."),
         };
 
         Ok(Cell::Number(lhs / rhs))

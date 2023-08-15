@@ -107,6 +107,10 @@ impl FunctionExecutor<'_> {
         // this will be in postfix notation
         let mut raw_input = raw_input.split_whitespace();
         while let Some(token) = raw_input.next() {
+            // todo: allow to do arthmetic on cells indexes
+            // by recursively calling do_arthmetic
+            // find a way to parse this
+            // suggestion: use a closed bracket detection
             if token.starts_with("~cell(") {
                 let token = token
                     .strip_prefix("~cell(")
