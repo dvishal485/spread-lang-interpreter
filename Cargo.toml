@@ -1,0 +1,15 @@
+[package]
+name = "spreadsheet"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chatgpt_rs = "1.1.13"
+clap = { version = "4.3.19", features = ["cargo"] }
+eyre = "0.6.8"
+plotly = "0.8.4"
+rustyline = { version = "12.0.0", features = ["with-file-history"] }
+serde = "1.0.183"
+tokio = { version = "1.31.0", features = ["rt", "full"] }
