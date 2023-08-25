@@ -1,4 +1,4 @@
-pub mod autocorrect;
+ub mod autocorrect;
 pub mod compiler;
 pub mod table;
 pub mod closure;

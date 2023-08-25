@@ -11,6 +11,68 @@ use std::{
     str::FromStr,
 };
 
+pub enum ResponsePlotType {
+    Bargraph((usize, usize)),
+    Histogram(usize),
+    Piechart(usize),
+    Scatterplot((usize, usize)),
+    DataInsufficient,
+    None,
+}
+impl FromStr for ResponsePlotType {
+    type Err = ();
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        let mut text = s.lines().map(|s| s.trim());
+        if let Some(plot_type) = text.next() {
+            let mut read_tuple = || -> Option<(usize, usize)> {
+                let x = text.next()?.split_whitespace().last()?;
+                let y = text.next()?.split_whitespace().last()?;
+                Some((x.parse::<usize>().ok()? - 1, y.parse::<usize>().ok()? - 1))
+            };
+            match plot_type.to_lowercase().as_str() {
+                "bargraph" | "bar" => {
+                    let tuple = read_tuple();
+                    if let Some(tuple) = tuple {
+                        Ok(ResponsePlotType::Bargraph(tuple))
+                    } else {
+                        Ok(ResponsePlotType::DataInsufficient)
+                    }
+                }
+                "scatterplot" | "scatter" => {
+                    let tuple = read_tuple();
+                    if let Some(tuple) = tuple {
+                        Ok(ResponsePlotType::Bargraph(tuple))
+                    } else {
+                        Ok(ResponsePlotType::DataInsufficient)
+                    }
+                }
+                "histogram" | "hist" => {
+                    let token = text.next().ok_or(())?.split_whitespace().last().ok_or(())?;
+                    if let Some(idx) = token.parse::<usize>().ok() {
+                        Ok(ResponsePlotType::Histogram(idx))
+                    } else {
+                        Ok(ResponsePlotType::DataInsufficient)
+                    }
+                }
+                "piechart" | "pie" => {
+                    let token = text.next().ok_or(())?.split_whitespace().last().ok_or(())?;
+                    if let Some(idx) = token.parse::<usize>().ok() {
+                        Ok(ResponsePlotType::Piechart(idx))
+                    } else {
+                        Ok(ResponsePlotType::DataInsufficient)
+                    }
+                }
+                "data_insufficient" => Ok(ResponsePlotType::DataInsufficient),
+                "none" => Ok(ResponsePlotType::None),
+                _ => Err(()),
+            }
+        } else {
+            Err(())
+        }
+    }
+}
+
 pub enum Operator {
     Assignment,
     AddRow,
@@ -465,7 +527,7 @@ impl VM {
                     table = table.to_csv()?
                 );
                 prompt_text.push_str(prompt);
-                println!("Prompt: {}", prompt_text);
+                // println!("Prompt: {}", prompt_text);
                 let client = ChatGPT::new(env!(
                     "OPENAI_KEY",
                     "OpenAI key not provided! Required to use prompt."

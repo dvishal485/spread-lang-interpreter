@@ -9,6 +9,8 @@ use std::{
     str::FromStr,
 };
 
+use crate::compiler::ResponsePlotType;
+
 #[macro_export]
 macro_rules! warn {
     ($($arg:tt)*) => ({
@@ -398,7 +400,6 @@ impl Table {
         }
     }
     pub fn get_cell(&self, row: usize, col: usize) -> Result<&Cell> {
-        println!("dimen = {:?}; ({},{})", self.dimensions(), row, col);
         self.rows
             .get(row)
             .ok_or(eyre::eyre!("Row index out of bound."))?
@@ -430,15 +431,67 @@ impl Table {
             .ok_or(eyre::eyre!("Row index out of bound."))
     }
     pub fn table_view(&self) -> Result<()> {
-        use plotly::{Plot, Scatter};
+        use chatgpt::prelude::*;
+
+        let prompt_text = format!(
+            r#"I am working with CSV file format, and want to make a plot out of following data:
+Table Name: {table}
+what kind of plot should I use, give response from one of "Scatter", "Histogram", "Bargraph", followed by the Column number used to be plot in next line:
+For example:
+Bargraph
+x = 1
+y = 2
+this will indicate to plot column 1 on x-axis and column 2 on y-axis in a bar graph.
+For "Bargraph" and "Scatter" mention both x and y value (strictly an integer which represents column number) and for "Histogram" only mention the x value (strictly an integer which represents column number).
+You can also respond with "None" in case no plot is relevant and "Data Insufficient" in case data is insufficient."#,
+            table = self.to_csv()?
+        );
+        // println!("Prompt: {}", prompt_text);
+        let client = ChatGPT::new(env!(
+            "OPENAI_KEY",
+            "OpenAI key not provided! Required to use prompt."
+        ))?;
+        use tokio::runtime::Runtime;
+        let rt = Runtime::new().unwrap();
+
+        let prompt_resp = rt.block_on(async { client.send_message(prompt_text).await })?;
+        let prompt_resp = prompt_resp.message().content.as_str();
+        // let prompt_resp = "Bargraph\nx = 1\ny = 2";
+        println!("{}", prompt_resp);
+        let graph = ResponsePlotType::from_str(prompt_resp)
+            .map_err(|_| eyre::eyre!("Invalid response from prompt: {}", prompt_resp))?;
+        use plotly::{Bar, Histogram, Plot, Scatter};
         let mut plot = Plot::new();
-        let c1 = self.get_column(0)?.into_iter().map(|x| x.clone()).collect();
-        let c2 = self.get_column(1)?.into_iter().map(|x| x.clone()).collect();
-        let trace = Scatter::new(c1, c2)
-            .name(self.title())
-            .x_axis(self.headers.cells[0].to_string())
-            .y_axis(self.headers.cells[1].to_string());
-        plot.add_trace(trace);
+        match graph {
+            ResponsePlotType::Bargraph((x, y)) => {
+                let xdata = self.get_column(x)?.into_iter().map(|x| x.clone()).collect();
+                let ydata = self.get_column(y)?.into_iter().map(|x| x.clone()).collect();
+                let trace = Bar::new(xdata, ydata)
+                    .name(self.title())
+                    .x_axis(self.headers.cells[x].to_string())
+                    .y_axis(self.headers.cells[y].to_string());
+                plot.add_trace(trace);
+            }
+            ResponsePlotType::Histogram(x) => {
+                let xdata = self.get_column(x)?.into_iter().map(|x| x.clone()).collect();
+                let trace = Histogram::new(xdata)
+                    .name(self.title())
+                    .x_axis(self.headers.cells[x].to_string());
+                plot.add_trace(trace);
+            }
+            ResponsePlotType::Piechart(_) => todo!(),
+            ResponsePlotType::Scatterplot((x, y)) => {
+                let xdata = self.get_column(x)?.into_iter().map(|x| x.clone()).collect();
+                let ydata = self.get_column(y)?.into_iter().map(|x| x.clone()).collect();
+                let trace = Scatter::new(xdata, ydata)
+                    .name(self.title())
+                    .x_axis(self.headers.cells[x].to_string())
+                    .y_axis(self.headers.cells[y].to_string());
+                plot.add_trace(trace);
+            }
+            ResponsePlotType::DataInsufficient => println!("Data is insufficient to make a plot."),
+            ResponsePlotType::None => println!("No plot is suitable for given data."),
+        }
         plot.write_html("plot.html");
         let html_table = self.to_html()?;
         // write table to table.html
@@ -454,7 +507,7 @@ impl Save for Table {
     fn to_csv(&self) -> Result<String> {
         let mut csv = String::new();
         csv.push_str(&self.title);
-        csv.push_str("\n");
+        csv.push('\n');
         for cell in &self.headers.cells {
             csv.push_str(cell.to_string().as_str());
             csv.push(',');
