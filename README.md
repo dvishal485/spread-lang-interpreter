@@ -105,11 +105,11 @@ To get started, follow the steps:
 
 ---
 
-## Closure
+### Closure
 
 ***Note:** Closures are currently highly experimental feature.*
 
-### What is closure?
+#### What is closure?
 
 - Closure act as a function to be applied on a range of cells.
 - Closure can be used to apply certain formulas/computation on the cells.
@@ -117,7 +117,7 @@ To get started, follow the steps:
 - Unlike other commands, closure can't be verified for correctness. Incorrect closure is possible to be declared but they can't be applied (will throw error at runtime).
 - Closure can borrow data mutably and hence perform any kind of operation.
 
-### Internal Structure of Closure
+#### Internal Structure of Closure
 
 - A defination of closure consists of three parts:
   1. Prescript
@@ -129,7 +129,7 @@ To get started, follow the steps:
 - Number of Registers a closure can access is restricted and defined within prescript.
 - Even developer feels they are black-magic.
 
-### Anatomy of Closure
+#### Anatomy of Closure
 
 - Closure looks like this: `prescript;script;postscript`.
 - Prescript contains information about output cell to be used, number of registers required by the closure.
@@ -137,7 +137,7 @@ To get started, follow the steps:
 - Postscript is the destructor of the closure.
 - All arithmetics are written in Postfix notation within a closure.
 
-### Some common closures
+#### Some common closures
 
 - Closure to add all cells in range
   
