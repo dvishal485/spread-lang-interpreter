@@ -6,6 +6,8 @@ A dummy language interpreter to generate spreadsheet files (csv format) and visu
 
 The language essentially is meant to be **turing complete** so one can perform any operations using the compiler/repl and hence can be used as a programming language as well! Thanks to the [power of closures](#closure) (experimental)
 
+[Here is the sample of spread-lang working demo](https://github.com/dvishal485/spread-lang-interpreter/blob/main/spread-lang.pdf)
+
 ---
 
 ## Agenda
@@ -38,6 +40,8 @@ The language essentially is meant to be **turing complete** so one can perform a
 
 ## Working with Electron repl
 
+[Here is the sample of spread-lang working demo](https://github.com/dvishal485/spread-lang-interpreter/blob/main/spread-lang.pdf)
+
 Apart from the CLI interface, the electron based repl can be used to visualize data in form of regular tables so it is easier to understand what is happening.
 
 ### Prerequisites
@@ -53,6 +57,7 @@ To get started, follow the steps:
   ```bash
   git clone https://github.com/dvishal485/spread-lang-interpreter
   cd spread-lang-interpreter
+  export OPENAI_KEY="YOUR_OPEN_AI_KEYS"
   cargo build --release
   cp ./target/release/spreadsheet ~/spreadsheet
   ```
